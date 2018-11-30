@@ -31,6 +31,14 @@
           }
         },
         {
+          "client_id": "602921620069-jbs0897dterjnrkp7scm7sp1fg0b5opr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nouraalrossiny.androidbottomnav",
+            "certificate_hash": "4d9d8e673ecd854f9c3dc6018221c7c740ef9a6e"
+          }
+        },
+        {
           "client_id": "602921620069-1g1cdv9ib9onvs7s6gkuaoie8euknh0i.apps.googleusercontent.com",
           "client_type": 3
         }

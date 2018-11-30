@@ -6,14 +6,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.TabLayout;
-import android.support.v4.view.ViewPager;
+
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -34,18 +29,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.IOException;
-
-
-public class ProfileActivity extends AppCompatActivity  implements View.OnClickListener {
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
-
-
+public class ProfileActivity extends AppCompatActivity  implements View.OnClickListener{
     private static final int CHOOSE_IMAGE = 101;
 
-    TextView textView;
-    ImageView imageView;
-    EditText editText;
+    EditText UserNameDisplay;
+    ImageView UserNameImg;
 
     Uri uriProfileImage;
     ProgressBar progressBar;
@@ -54,28 +42,21 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
 
     FirebaseAuth mAuth;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
-
-
-        //-------------- Toolbar------------------
-        Toolbar setupToolbar = findViewById(R.id.setupToolbar);
-        setSupportActionBar(setupToolbar); //name of application
-        getSupportActionBar().setTitle("Account Setup");
-
-
         mAuth = FirebaseAuth.getInstance();
 
 
-        textView = (TextView) findViewById(R.id.userName);
+        UserNameDisplay =findViewById(R.id.userName_prfile);
         progressBar = findViewById(R.id.progressbar);
         progressBar.setVisibility(View.GONE);
 
-        findViewById(R.id.setup_image).setOnClickListener(this);
-        findViewById(R.id.setup_btn).setOnClickListener(this);
-        findViewById(R.id.deletebtn).setOnClickListener(this);
+        findViewById(R.id.User_photo).setOnClickListener(this);
+        findViewById(R.id.update_Profile).setOnClickListener(this);
+        findViewById(R.id.deleteAccount_Profile).setOnClickListener(this);
 
         loadUserInformation();
 
@@ -91,56 +72,37 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
         }
     }
 
-    private void loadUserInformation() {
+    private void loadUserInformation() { //retriev userName and photo
         final FirebaseUser user = mAuth.getCurrentUser();
 
         if (user != null) {
             if (user.getPhotoUrl() != null) {
                 Glide.with(this)
                         .load(user.getPhotoUrl().toString())
-                        .into(imageView);
+                        .into(UserNameImg);
             }
 
-            if (user.getDisplayName() != null) {
-                textView.setText(user.getDisplayName());
-            } else if (user.getDisplayName() == null) {
-                textView.setText("");
-            }
-
-         /*   if (user.isEmailVerified()) {
-                textView.setText("Email Verified");
-            } else {
-                textView.setText("Email Not Verified (Click to Verify)");
-                textView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        user.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                Toast.makeText(ProfileActivity.this, "Verification Email Sent", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                });
-            }*/
+            if (user.getDisplayName() != null)
+                UserNameDisplay.setText(user.getDisplayName());
+            else
+                UserNameDisplay.setText("");
         }
     }
 
 
-    private void saveUserInformation() {
+    private void saveUserInformation() {   //if user change
 
+        String displayName = UserNameDisplay.getText().toString();
 
-        String displayName = editText.getText().toString();
-
-        if (displayName.isEmpty()) {
-            editText.setError("Name required");
-            editText.requestFocus();
+        if (displayName.isEmpty()) { //GET NAME FROM USER
+            UserNameDisplay.setError("Name required");
+            UserNameDisplay.requestFocus();
             return;
         }
 
         FirebaseUser user = mAuth.getCurrentUser();
 
-        if (user != null && profileImageUrl != null) {
+        if (user != null && profileImageUrl != null) { //have name and photo -->update
             UserProfileChangeRequest profile = new UserProfileChangeRequest.Builder()
                     .setDisplayName(displayName)
                     .setPhotoUri(Uri.parse(profileImageUrl))
@@ -151,7 +113,7 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(ProfileActivity.this, "Profile Updated", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ProfileActivity.this, "تم تحديث الحساب بنجاح", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -166,7 +128,7 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
             uriProfileImage = data.getData();
             try {
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uriProfileImage);
-                imageView.setImageBitmap(bitmap);
+                UserNameImg.setImageBitmap(bitmap);
 
                 uploadImageToFirebaseStorage();
 
@@ -204,34 +166,6 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.Logout:
-
-                FirebaseAuth.getInstance().signOut();
-                finish();
-                startActivity(new Intent(this, MainActivity.class));
-                break;
-
-            case R.id.settings:
-                finish();
-                startActivity(new Intent(this, SettingAccount.class));
-                break;
-
-        }
-
-        return true;
-    }
 
     private void showImageChooser() {
         Intent intent = new Intent();
@@ -262,27 +196,24 @@ public class ProfileActivity extends AppCompatActivity  implements View.OnClickL
         }
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.deletebtn:
+            case R.id.deleteAccount_Profile:
                 delete();
                 finish();
                 startActivity(new Intent(ProfileActivity.this, MainActivity.class));
                 break;
-            case R.id.userName:
-                Toast.makeText(getApplicationContext(), "اسم المستخدم", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.setup_image:
+
+            case R.id.User_photo:
                 showImageChooser();
                 break;
-            case R.id.setup_btn:
+
+            case R.id.update_Profile:
                 saveUserInformation();
                 break;
-
-
         }
     }
-}
+    }
+
 
